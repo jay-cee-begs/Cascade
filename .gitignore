@@ -4,3 +4,7 @@ __pycache__/
 .ipynb_checkpoints/
 *.eggs/
 *.egg-info/
+*.yaml
+*.yml
+Pretrained_Models/*
+*.ipynb
