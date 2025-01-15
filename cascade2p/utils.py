@@ -556,15 +556,14 @@ def plot_dFF_traces(traces,neuron_indices,frame_rate,spiking=None,discrete_spike
   return time
 
 
-def plot_noise_matched_ground_truth( model_name, median_noise, frame_rate, nb_traces, duration ):
+def plot_noise_matched_ground_truth( model_name, median_noise, frame_rate, nb_traces, duration, cascade_file_path ):
 
   """
   Plots a subset (junks of 50 seconds) of calcium imaging data together with electrophysiological
   ground truth from the ground truth datasets used for training the model
 
   """
-
-  model_folder = os.path.join('Pretrained_models', model_name)
+  model_folder = os.path.join(str(cascade_file_path), 'Pretrained_models', model_name)
 
   # Load config file
   cfg = config.read_config( os.path.join( model_folder, 'config.yaml'))
@@ -608,7 +607,7 @@ def plot_noise_matched_ground_truth( model_name, median_noise, frame_rate, nb_tr
                               verbose = cfg['verbose'],
                               replicas = 0)
 
-  X = X[:,np.int(cfg['windowsize']/2),]
+  X = X[:,int(cfg['windowsize']/2),] #change int from np.int to compatible with older numpy versions
   Y = Y[:,]
 
   # the following is very similar to the function "plot_dFF_traces()"
@@ -620,28 +619,30 @@ def plot_noise_matched_ground_truth( model_name, median_noise, frame_rate, nb_tr
     pass
 
   duration_datapoints = int(duration*frame_rate)
+  if X.shape[0] > duration_datapoints:
 
-  time_indices = np.random.randint(X.shape[0]-duration_datapoints, size=nb_traces)
+    time_indices = np.random.randint(X.shape[0]-duration_datapoints, size=nb_traces)
 
-  time = np.arange(0,int(duration*frame_rate))/frame_rate
+    time = np.arange(0,int(duration*frame_rate))/frame_rate
 
-  fig, axs = plt.subplots(int(np.ceil(nb_traces/2)), 2,  sharex=True, sharey=True)
-  fig.add_subplot(111, frameon=False)
-  # hide tick and tick label of the big axis
-  plt.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
-  plt.xlabel('Time (s)')
-  plt.ylabel('dF/F and ground truth spiking')
+    fig, axs = plt.subplots(int(np.ceil(nb_traces/2)), 2,  sharex=True, sharey=True)
+    fig.add_subplot(111, frameon=False)
+    # hide tick and tick label of the big axis
+    plt.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+    plt.xlabel('Time (s)')
+    plt.ylabel('dF/F and ground truth spiking')
 
-  for k,time_index in enumerate(time_indices):
+    for k,time_index in enumerate(time_indices):
 
-    subplot_ix = int(k/2), int(np.mod(k,2))
-    axs[subplot_ix].plot(time,X[time_index:time_index+duration_datapoints,:])
-#    axs[subplot_ix].set_ylim(y_range)
-    axs[subplot_ix].set_xlim(0, duration)
+        subplot_ix = int(k/2), int(np.mod(k,2))
+        axs[subplot_ix].plot(time,X[time_index:time_index+duration_datapoints,:])
+    #    axs[subplot_ix].set_ylim(y_range)
+        axs[subplot_ix].set_xlim(0, duration)
 
-    axs[subplot_ix].plot(time,Y[time_index:time_index+duration_datapoints]-1)
+        axs[subplot_ix].plot(time,Y[time_index:time_index+duration_datapoints]-1)
 
-
+    else:
+        print("Not enough data points for the specified duration and frame rate")
 
 def plot_noise_level_distribution(traces,frame_rate):
 
